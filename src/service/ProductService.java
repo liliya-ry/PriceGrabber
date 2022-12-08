@@ -2,13 +2,11 @@ package service;
 
 import dao.Product;
 import mappers.ProductMapper;
-import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.*;
 
 import java.io.*;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.*;
 
 public class ProductService {
     private final SqlSessionFactory factory;
@@ -23,25 +21,23 @@ public class ProductService {
         this.factory = new SqlSessionFactoryBuilder().build(reader);
     }
 
-    public void insertProduct(Product product) throws PersistenceException {
+    public Map<Integer, Product> getAllProducts() {
+        try (SqlSession sqlSession = factory.openSession()) {
+            ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
+            List<Product> products = productMapper.getAllProducts();
+            Map<Integer, Product> res = new HashMap<>();
+            for (Product product : products) {
+                res.put(product.id, product);
+            }
+            return res;
+        }
+    }
+
+    public void insertProduct(Product product) {
         try (SqlSession sqlSession = factory.openSession()) {
             ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
             productMapper.insertProduct(product);
             sqlSession.commit();
-        }
-    }
-
-    public Product getProductById(Integer id) {
-        try (SqlSession sqlSession = factory.openSession()) {
-            ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
-            return productMapper.getProductById(id);
-        }
-    }
-
-    public double getPriceById(Integer id) {
-        try (SqlSession sqlSession = factory.openSession()) {
-            ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
-            return productMapper.getPriceById(id);
         }
     }
 

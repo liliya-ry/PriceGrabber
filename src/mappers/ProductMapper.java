@@ -2,9 +2,10 @@ package mappers;
 
 import dao.Product;
 
+import java.util.List;
+
 public interface ProductMapper {
-    Product getProductById(int id);
+    List<Product> getAllProducts();
     void insertProduct(Product product);
-    int updateProduct(Product product);
-    double getPriceById(int id);
+    void updateProduct(Product product);
 }

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8' ?>
+﻿<?xml version='1.0' encoding='UTF-8' ?>
 <!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
         'http://mybatis.org/dtd/mybatis-3-mapper.dtd'>
 
@@ -11,7 +11,8 @@
         price as price,
         description as description,
         img_src as imgSrc,
-        modified as modified
+        last_modified as lastModified,
+        status as status
         FROM PRODUCTS
         WHERE PRODUCT_ID = #{id}
     </select>
@@ -20,13 +21,27 @@
         SELECT price FROM PRODUCTS WHERE PRODUCT_ID = #{id}
     </select>
 
+    <select id='getAllProducts' resultMap='ProductResult1'>
+        SELECT * FROM PRODUCTS
+    </select>
+
     <resultMap type='Product' id='ProductResult'>
         <id property='id' column='product_id'/>
         <result property='title' column='title'/>
         <result property='price' column='price'/>
         <result property='description' column='description'/>
         <result property='imgSrc' column='img_src'/>
-        <result property='modified' column='modified'/>
+        <result property='lastModified' column='last_modified'/>
+        <result property='status' column='status'/>
+    </resultMap>
+
+    <resultMap type='Product' id='ProductResult1'>
+        <id property='id' column='product_id'/>
+        <result property='title' column='title'/>
+        <result property='price' column='price'/>
+        <result property='description' column='description'/>
+        <result property='imgSrc' column='img_src'/>
+        <result property='status' column='status'/>
     </resultMap>
 
     <insert id='insertProduct' parameterType='Product' useGeneratedKeys='true' keyProperty='id'>
@@ -36,7 +51,8 @@
         price,
         description,
         img_src,
-        modified
+        last_modified,
+        status
         )
         VALUES(
         #{id},
@@ -44,7 +60,8 @@
         #{price},
         #{description},
         #{imgSrc},
-        #{modified}
+        #{lastModified},
+        #{status}
         )
     </insert>
 
@@ -55,7 +72,8 @@
         PRICE = #{price},
         DESCRIPTION = #{description},
         IMG_SRC = #{imgSrc},
-        MODIFIED = #{modified}
+        LAST_MODIFIED = #{lastModified},
+        STATUS = #{status}
         WHERE PRODUCT_ID = #{id}
     </update>
 </mapper>
