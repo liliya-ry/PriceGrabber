@@ -6,4 +6,5 @@ public interface ProductMapper {
     Product getProductById(int id);
     void insertProduct(Product product);
     int updateProduct(Product product);
+    double getPriceById(int id);
 }

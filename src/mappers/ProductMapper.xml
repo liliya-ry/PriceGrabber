@@ -16,6 +16,10 @@
         WHERE PRODUCT_ID = #{id}
     </select>
 
+    <select id='getPriceById' parameterType='int' resultType='double'>
+        SELECT price FROM PRODUCTS WHERE PRODUCT_ID = #{id}
+    </select>
+
     <resultMap type='Product' id='ProductResult'>
         <id property='id' column='product_id'/>
         <result property='title' column='title'/>
