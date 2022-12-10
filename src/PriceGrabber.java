@@ -1,98 +1,82 @@
-import static java.net.http.HttpResponse.BodyHandlers.ofString;
+import static java.net.http.HttpResponse.BodyHandlers.*;
 
 import dao.Product;
 import org.apache.ibatis.exceptions.PersistenceException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import service.ProductService;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.*;
 import java.net.http.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.nio.file.*;
+import java.util.*;
 
 public class PriceGrabber {
-    private ProductService service;
-    private HttpClient client;
-    private Logger logger;
-    private String url;
-    private Set<Integer> addedProductsId;
+    private ProductService service = new ProductService();
+    private HttpClient client = HttpClient.newBuilder().build();
+    private Logger logger = LogManager.getLogger(PriceGrabber.class);
+    private Set<Integer> addedProductsId = new HashSet<>();
+    private Set<Integer> dbProductsIds;
+    private String imageDir;
+    private String baseUrl;
 
-    public PriceGrabber(String url) {
-        this.url = url;
-        service = new ProductService();
-        client = HttpClient.newBuilder().build();
-        logger = LogManager.getLogger(PriceGrabber.class);
-        addedProductsId = new HashSet<>();
+    public  PriceGrabber(String baseUrl, String imageDir) {
+        this.baseUrl = baseUrl;
+        this.imageDir = imageDir;
+        dbProductsIds = service.getAllProductIds();
     }
 
-    private HttpResponse<?> getHttpResponse(String url) throws URISyntaxException, InterruptedException, IOException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(new URI(url))
-                .GET()
-                .build();
-
-        HttpResponse.BodyHandler<?> bodyHandler = ofString();
-        return client.send(request, bodyHandler);
-    }
-
-    public void grabProductList() throws Exception {
-        HttpResponse<?> response = getHttpResponse(url);
-        String html = (String) response.body();
-        Document document = Jsoup.parse(html);
-        Element pagesNav = document.select("div[class=\"paging\"]").first();
-        Elements pagesLinks = pagesNav.getElementsByTag("a");
-
-        for (Element pageLink : pagesLinks) {
-            String text = pageLink.text();
-            if (text.equals("« Предишна") || text.equals("Следваща »")) {
-                continue;
-            }
-
-            String pageUrl = pageLink.attr("href");
-            try {
-                grabPage(pageUrl);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
+    public void grabProductList() {
+        int lastIndex = baseUrl.indexOf('?');
+        String pageOneUrl = lastIndex != -1 ? baseUrl.substring(0, lastIndex) : baseUrl;
+        try {
+            grabPage(pageOneUrl);
+        } catch (Exception e) {
+            logger.error(e);
+            return;
         }
-
         markDeletedProducts();
     }
 
     public void grabPage(String url) throws Exception {
-        HttpResponse<?> response = getHttpResponse(url);
-        String html = (String) response.body();
-        Document document = Jsoup.parse(html);
+        Document document = getDocumentFromUrl(url);
 
         Elements productsOnPage = document.select("div[class=\"listItemContainer\"]");
         for (Element page : productsOnPage) {
             Product product = createProduct(page);
+            addedProductsId.add(product.id);
 
-            try {
+            if (!dbProductsIds.contains(product.id)) {
                 service.insertProduct(product);
                 logger.info("Product added: {} - {}", product.title, product.price);
-            } catch (PersistenceException e) {
-                double oldPrice = service.getPriceById(product.id);
-                service.updateProduct(product);
-                if (oldPrice != product.price) {
-                    logger.info("Product: {}, Price changed from {} to {}", product.title, oldPrice, product.price);
-                }
+                continue;
             }
 
-            addedProductsId.add(product.id);
+            double oldPrice = service.getPriceById(product.id);
+            service.updateProduct(product);
+            if (oldPrice != product.price) {
+                logger.info("Product: {}, Price changed from {} to {}", product.title, oldPrice, product.price);
+            }
         }
+
+        grabNextPage(document);
     }
 
+    private void grabNextPage(Document document) throws Exception {
+        Element nextPageEl = document.select("a[class=\"btn btn-default next\"]").first();
+        if (nextPageEl == null) {
+            return;
+        }
+        String nextPageUrl = nextPageEl.attr("href");
+        grabPage(nextPageUrl);
+    }
+
+
     private void markDeletedProducts() {
-        List<Integer> dbProductsId = service.getAllProductIds();
-        for (Integer id : dbProductsId) {
+        for (Integer id : dbProductsIds) {
             if (addedProductsId.contains(id)) {
                 continue;
             }
@@ -101,13 +85,10 @@ public class PriceGrabber {
         }
     }
 
-    private Product createProduct(Element page) {
+    private Product createProduct(Element page) throws Exception {
         Product product = new Product();
-
         String idStr = getAttributeStr(page, "a", "data-id");
         product.id = Integer.parseInt(idStr);
-
-        product.imgSrc = "https:" + getAttributeStr(page, "img", "src");
 
         Elements spans = page.getElementsByTag("span");
         for (Element spanEl : spans) {
@@ -121,7 +102,68 @@ public class PriceGrabber {
             }
         }
 
+        String productUrl = getAttributeStr(page, "a", "href");
+        loadGalleryAndDescription(product, productUrl);
+
         return product;
+    }
+
+    private void loadGalleryAndDescription(Product product, String productUrl) throws Exception {
+        Document document = getDocumentFromUrl(productUrl);
+        Element descriptionEl = document.select("div[itemprop=\"description\"]").first();
+        product.description = descriptionEl.text();
+        createDirIfDoesNotExist(imageDir);
+        downloadImages(product, document);
+    }
+
+    private void downloadImages(Product product, Document document) throws Exception {
+        product.imgSrc = imageDir + "/" + product.id;
+        createDirIfDoesNotExist(product.imgSrc);
+        Elements galleryElements = document.select("span[class=\"gallery-element\"]");
+        int imgNameCount = 1;
+        for (Element galleryEl : galleryElements) {
+            Element imageEl = galleryEl.getElementsByTag("img").first();
+            String imageLink = "https:" + imageEl.attr("src");
+            downloadImage(imageLink, product.imgSrc, imgNameCount++);
+        }
+    }
+
+    private void downloadImage(String imgUrl, String dir, int imageNameCount) throws Exception {
+        HttpResponse<?> response = getHttpResponse(imgUrl, InputStream.class);
+        try (InputStream in = (InputStream) response.body()) {
+            String imgName = imageNameCount + "." + getImgFormat(response);
+            File file = new File(dir + "/" + imgName);
+            Files.copy(in, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private void createDirIfDoesNotExist(String dir) throws IOException {
+        Path dirPath = Paths.get(dir);
+        if (!Files.exists(dirPath)) {
+            Files.createDirectories(dirPath);
+        }
+    }
+
+    private String getImgFormat(HttpResponse<?> response) {
+        HttpHeaders httpHeaders = response.headers();
+        List<String> contentTypeList = httpHeaders.allValues("Content-Type");
+        String imgFormat = contentTypeList.get(0);
+
+        int startIndex = imgFormat.indexOf("/") + 1;
+        imgFormat = imgFormat.substring(startIndex);
+
+        if (imgFormat.equals("svg+xml")) {
+            imgFormat = "svg";
+        }
+
+        return imgFormat;
+    }
+
+    private Document getDocumentFromUrl(String url) throws Exception {
+        HttpResponse<?> response = getHttpResponse(url, String.class);
+        String html = (String) response.body();
+        Document document = Jsoup.parse(html);
+        return document;
     }
 
     private String getAttributeStr(Element element, String tagName, String attrKey) {
@@ -129,18 +171,26 @@ public class PriceGrabber {
         return link.attr(attrKey);
     }
 
+    private HttpResponse<?> getHttpResponse(String url, Class<?> cl) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI(url))
+                .GET()
+                .build();
+
+        HttpResponse.BodyHandler<?> bodyHandler = cl.equals(String.class) ? ofString() : ofInputStream();
+        return client.send(request, bodyHandler);
+    }
+
     public static void main(String[] args) {
-        if (args == null || args.length != 1) {
-            System.out.println("Invalid command");
+        if (args == null || args.length != 2) {
+            System.out.println("Invalid command: Try: URL DIR");
             return;
         }
 
         String url = args[0];
-        PriceGrabber priceGrabber = new PriceGrabber(url);
-        try {
-            priceGrabber.grabProductList();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+        String dir = args[1];
+        PriceGrabber priceGrabber = new PriceGrabber(url, dir);
+        priceGrabber.grabProductList();
+
     }
 }

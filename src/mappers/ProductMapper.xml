@@ -22,15 +22,6 @@
         SELECT product_id FROM PRODUCTS
     </select>
 
-    <resultMap type='Product' id='ProductResult1'>
-        <id property='id' column='product_id'/>
-        <result property='title' column='title'/>
-        <result property='price' column='price'/>
-        <result property='address' column='address'/>
-        <result property='imgSrc' column='img_src'/>
-        <result property='status' column='status'/>
-    </resultMap>
-
     <insert id='insertProduct' parameterType='Product'>
         INSERT INTO PRODUCTS(
         product_id,
@@ -39,7 +30,8 @@
         address,
         img_src,
         last_modified,
-        status
+        status,
+        description
         )
         VALUES(
         #{id},
@@ -48,7 +40,8 @@
         #{address},
         #{imgSrc},
         #{lastModified},
-        #{status}
+        #{status},
+        #{description}
         )
     </insert>
 
@@ -60,7 +53,8 @@
         ADDRESS = #{address},
         IMG_SRC = #{imgSrc},
         LAST_MODIFIED = #{lastModified},
-        STATUS = #{status}
+        STATUS = #{status},
+        DESCRIPTION = #{description}
         WHERE PRODUCT_ID = #{id}
     </update>
 

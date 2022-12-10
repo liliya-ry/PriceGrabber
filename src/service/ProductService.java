@@ -30,7 +30,7 @@ public class ProductService {
         }
     }
 
-    public List<Integer> getAllProductIds() {
+    public Set<Integer> getAllProductIds() {
         try (SqlSession sqlSession = factory.openSession()) {
             ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
             return productMapper.getAllProductIds();

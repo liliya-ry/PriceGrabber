@@ -2,19 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b6536b85-ee42-4771-8595-eb69b38b6173" name="Changes" comment="update">
-      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/7/c/7c9eaae144b74ae75637386013bf1227595863d4" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/9/f/9fe84ebb15faf917b7def6236dba604453cc61e0" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/a/5/a5cc2925ca8258af241be7e5b0381edf30266302" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/c/4/c47caa070dd7f1c019c61c02b92bf4ff5870ae61" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/log4j-api-2.19.0.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/log4j-core-2.19.0.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/resources/log4j2.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/gson_2_2_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/gson_2_2_2.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PriceGrabber.iml" beforeDir="false" afterPath="$PROJECT_DIR$/PriceGrabber.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PriceGrabber.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PriceGrabber.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/dao/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/dao/Product.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/mappers/ProductMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/mappers/ProductMapper.java" afterDir="false" />
@@ -57,7 +45,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "SONARLINT_PRECOMMIT_ANALYSIS": "true",
-    "last_opened_file_path": "D:/IdeaProjects/PriceGrabber/lib/log4j-core-2.19.0.jar",
+    "last_opened_file_path": "D:/IdeaProjects/WebCrawler",
     "project.structure.last.edited": "Global Libraries",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
@@ -77,7 +65,7 @@
     <configuration name="PriceGrabber" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="PriceGrabber" />
       <module name="PriceGrabber" />
-      <option name="PROGRAM_PARAMETERS" value="https://bazar.bg/obiavi/damski-maratonki" />
+      <option name="PROGRAM_PARAMETERS" value="https://bazar.bg/obiavi/rachno-izraboteni-suveniri?page=4 $PROJECT_DIR$/../../images" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="dao.*" />
@@ -167,7 +155,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670534809018</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="update">
+      <created>1670699992028</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1670699992028</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

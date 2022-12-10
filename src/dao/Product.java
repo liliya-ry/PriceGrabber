@@ -16,6 +16,7 @@ public class Product {
     public String imgSrc;
     public LocalDate lastModified;
     public String status = DEFAULT_STATUS;
+    public String description;
 
     static {
         MONTHS = new HashMap<>();
