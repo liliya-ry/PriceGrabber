@@ -4,52 +4,39 @@
 
 <mapper namespace='mappers.ProductMapper'>
 
-    <select id='getProductById' parameterType='int' resultType='dao.Product'>
-        SELECT
-        product_id as id,
-        title as title,
-        price as price,
-        description as description,
-        img_src as imgSrc,
-        last_modified as lastModified,
-        status as status
-        FROM PRODUCTS
-        WHERE PRODUCT_ID = #{id}
-    </select>
-
-    <select id='getPriceById' parameterType='int' resultType='double'>
-        SELECT price FROM PRODUCTS WHERE PRODUCT_ID = #{id}
-    </select>
-
-    <select id='getAllProducts' resultMap='ProductResult1'>
-        SELECT * FROM PRODUCTS
-    </select>
-
     <resultMap type='Product' id='ProductResult'>
         <id property='id' column='product_id'/>
         <result property='title' column='title'/>
         <result property='price' column='price'/>
-        <result property='description' column='description'/>
+        <result property='address' column='address'/>
         <result property='imgSrc' column='img_src'/>
         <result property='lastModified' column='last_modified'/>
         <result property='status' column='status'/>
     </resultMap>
 
+    <select id='getPriceById' parameterType='int' resultType='double'>
+        SELECT price FROM PRODUCTS WHERE PRODUCT_ID = #{id}
+    </select>
+
+    <select id='getAllProductIds' resultType='Integer'>
+        SELECT product_id FROM PRODUCTS
+    </select>
+
     <resultMap type='Product' id='ProductResult1'>
         <id property='id' column='product_id'/>
         <result property='title' column='title'/>
         <result property='price' column='price'/>
-        <result property='description' column='description'/>
+        <result property='address' column='address'/>
         <result property='imgSrc' column='img_src'/>
         <result property='status' column='status'/>
     </resultMap>
 
-    <insert id='insertProduct' parameterType='Product' useGeneratedKeys='true' keyProperty='id'>
+    <insert id='insertProduct' parameterType='Product'>
         INSERT INTO PRODUCTS(
         product_id,
         title,
         price,
-        description,
+        address,
         img_src,
         last_modified,
         status
@@ -58,22 +45,30 @@
         #{id},
         #{title},
         #{price},
-        #{description},
+        #{address},
         #{imgSrc},
         #{lastModified},
         #{status}
         )
     </insert>
 
-    <update id='updateProduct' parameterType='Product' useGeneratedKeys='true' keyProperty='id'>
+    <update id='updateProduct' parameterType='Product'>
         UPDATE PRODUCTS
         SET
         TITLE = #{title},
         PRICE = #{price},
-        DESCRIPTION = #{description},
+        ADDRESS = #{address},
         IMG_SRC = #{imgSrc},
         LAST_MODIFIED = #{lastModified},
         STATUS = #{status}
         WHERE PRODUCT_ID = #{id}
     </update>
+
+    <update id='markProductAsDeleted' parameterType='int'>
+        UPDATE PRODUCTS
+        SET
+        STATUS = 'DELETED'
+        WHERE PRODUCT_ID = #{id}
+    </update>
+
 </mapper>

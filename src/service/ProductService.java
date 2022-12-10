@@ -2,10 +2,12 @@ package service;
 
 import dao.Product;
 import mappers.ProductMapper;
+import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.*;
 
 import java.io.*;
+import java.io.Reader;
 import java.util.*;
 
 public class ProductService {
@@ -21,19 +23,21 @@ public class ProductService {
         this.factory = new SqlSessionFactoryBuilder().build(reader);
     }
 
-    public Map<Integer, Product> getAllProducts() {
+    public double getPriceById(int productId) {
         try (SqlSession sqlSession = factory.openSession()) {
             ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
-            List<Product> products = productMapper.getAllProducts();
-            Map<Integer, Product> res = new HashMap<>();
-            for (Product product : products) {
-                res.put(product.id, product);
-            }
-            return res;
+            return productMapper.getPriceById(productId);
         }
     }
 
-    public void insertProduct(Product product) {
+    public List<Integer> getAllProductIds() {
+        try (SqlSession sqlSession = factory.openSession()) {
+            ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
+            return productMapper.getAllProductIds();
+        }
+    }
+
+    public void insertProduct(Product product) throws PersistenceException {
         try (SqlSession sqlSession = factory.openSession()) {
             ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
             productMapper.insertProduct(product);
@@ -45,6 +49,14 @@ public class ProductService {
         try (SqlSession sqlSession = factory.openSession()) {
             ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
             productMapper.updateProduct(product);
+            sqlSession.commit();
+        }
+    }
+
+    public void markProductAsDeleted(int productId) {
+        try (SqlSession sqlSession = factory.openSession()) {
+            ProductMapper productMapper = sqlSession.getMapper(ProductMapper.class);
+            productMapper.markProductAsDeleted(productId);
             sqlSession.commit();
         }
     }

@@ -5,14 +5,14 @@ import java.util.*;
 import java.util.regex.*;
 
 public class Product {
-    private static final Pattern PRICE_PATTERN = Pattern.compile("(\\d+(\\,\\d+)?)");
+    private static final Pattern PRICE_PATTERN = Pattern.compile("(\\d+(\\,)?(\\d+)?)");
     private static final Map<String, Integer> MONTHS;
     public static final String DEFAULT_STATUS = "AVAILABLE";
 
     public int id;
     public String title;
     public double price;
-    public String description;
+    public String address;
     public String imgSrc;
     public LocalDate lastModified;
     public String status = DEFAULT_STATUS;
@@ -48,7 +48,8 @@ public class Product {
     public void setPrice(String priceStr) {
         Matcher matcher = PRICE_PATTERN.matcher(priceStr);
         if (matcher.find()) {
-            this.price = Double.parseDouble(matcher.group(0));
+            String priceValue = matcher.group().replace(',', '.');
+            this.price = Double.parseDouble(priceValue);
         }
     }
 }

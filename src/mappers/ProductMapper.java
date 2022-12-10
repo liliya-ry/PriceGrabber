@@ -5,7 +5,9 @@ import dao.Product;
 import java.util.List;
 
 public interface ProductMapper {
-    List<Product> getAllProducts();
+    List<Integer> getAllProductIds();
+    double getPriceById(int productId);
     void insertProduct(Product product);
     void updateProduct(Product product);
+    void markProductAsDeleted(int productId);
 }
