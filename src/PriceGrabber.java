@@ -6,6 +6,7 @@ import org.apache.logging.log4j.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
+import service.LoggingConfigurator;
 import service.ProductService;
 
 import java.io.*;
@@ -17,7 +18,7 @@ import java.util.*;
 public class PriceGrabber {
     private ProductService service = new ProductService();
     private HttpClient client = HttpClient.newBuilder().build();
-    private Logger logger = LogManager.getLogger(PriceGrabber.class);
+    private Logger logger;
     private Set<Integer> addedProductsId = new HashSet<>();
     private Set<Integer> dbProductsIds;
     private String imageDir;
@@ -27,6 +28,8 @@ public class PriceGrabber {
         this.baseUrl = baseUrl;
         this.imageDir = imageDir;
         dbProductsIds = service.getAllProductIds();
+        //LoggingConfigurator.configureLogging();
+        this.logger = LogManager.getLogger(PriceGrabber.class);
     }
 
     public void grabProductList() {
