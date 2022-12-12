@@ -1,7 +1,6 @@
 package dao;
 
 public class Image {
-    int id;
     int productId;
     String imgUrl;
     String imgPath;

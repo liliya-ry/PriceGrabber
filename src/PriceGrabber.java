@@ -2,7 +2,7 @@ import static java.net.http.HttpResponse.BodyHandlers.*;
 
 import dao.Image;
 import dao.Product;
-import org.apache.ibatis.exceptions.PersistenceException;
+import org.apache.commons.cli.*;
 import org.apache.logging.log4j.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
@@ -17,6 +17,7 @@ import java.nio.file.*;
 import java.util.*;
 
 public class PriceGrabber {
+    private static final String DEFAULT_DIR = "images";
     private ProductService productService = new ProductService();
     private ImageService imageService = new ImageService();
     private HttpClient client = HttpClient.newBuilder().build();
@@ -30,13 +31,11 @@ public class PriceGrabber {
         this.baseUrl = baseUrl;
         this.imageDir = imageDir;
         dbProductsIds = productService.getAllProductIds();
-        //LoggingConfigurator.configureLogging();
         this.logger = LogManager.getLogger(PriceGrabber.class);
     }
 
     public void grabProductList() {
-        int lastIndex = baseUrl.indexOf('?');
-        String pageOneUrl = lastIndex != -1 ? baseUrl.substring(0, lastIndex) : baseUrl;
+        String pageOneUrl = getFirstPageUrl();
         try {
             grabPage(pageOneUrl);
         } catch (Exception e) {
@@ -46,27 +45,27 @@ public class PriceGrabber {
         markDeletedProducts();
     }
 
+    private String getFirstPageUrl() {
+        int lastIndex = baseUrl.indexOf('?');
+        return lastIndex != -1 ? baseUrl.substring(0, lastIndex) : baseUrl;
+    }
+
     public void grabPage(String url) throws Exception {
         Document document = getDocumentFromUrl(url);
 
         Elements productsOnPage = document.select("div[class=\"listItemContainer\"]");
         for (Element page : productsOnPage) {
             Product product = createProduct(page);
-            addedProductsId.add(product.id);
+            parseDataFromProductPage(page, product);
 
-            if (!dbProductsIds.contains(product.id)) {
-                try {
-                    productService.insertProduct(product);
-                } catch (PersistenceException e) {
-                    updateProduct(product);
-                    continue;
-                }
-
-                logger.info("Product added: {} - {}", product.title, product.price);
+            if (!dbProductsIds.isEmpty() && (dbProductsIds.contains(product.id) || addedProductsId.contains(product.id))) {
+                updateProduct(product);
                 continue;
             }
 
-            updateProduct(product);
+            productService.insertProduct(product);
+            addedProductsId.add(product.id);
+            logger.info("Product added: {} - {}", product.title, product.price);
         }
 
         grabNextPage(document);
@@ -80,17 +79,13 @@ public class PriceGrabber {
         }
     }
 
-    private void grabNextPage(Document document)  {
+    private void grabNextPage(Document document) throws Exception {
         Element nextPageEl = document.select("a[class=\"btn btn-default next\"]").first();
         if (nextPageEl == null) {
             return;
         }
         String nextPageUrl = nextPageEl.attr("href");
-        try {
-            grabPage(nextPageUrl);
-        } catch (Exception e) {
-            logger.error(e);
-        }
+        grabPage(nextPageUrl);
     }
 
 
@@ -121,27 +116,23 @@ public class PriceGrabber {
             }
         }
 
-        product.imgSrc = imageDir + "/" + product.id;
-        String productUrl = getAttributeStr(page, "a", "href");
-        try {
-            loadGalleryAndDescription(product, productUrl);
-        } catch (Exception e) {
-            logger.error(e);
-        }
-
         return product;
     }
 
-    private void loadGalleryAndDescription(Product product, String productUrl) throws Exception {
+    private void parseDataFromProductPage(Element page, Product product) throws Exception {
+        product.imgSrc = "/" + product.id;
+        String productUrl = getAttributeStr(page, "a", "href");
+
         Document document = getDocumentFromUrl(productUrl);
         Element descriptionEl = document.select("div[itemprop=\"description\"]").first();
         product.description = descriptionEl.text();
+
         createDirIfDoesNotExist(imageDir);
-        downloadImages(product, document);
+        downloadProductImages(product, document);
     }
 
-    private void downloadImages(Product product, Document document) throws IOException {
-        createDirIfDoesNotExist(product.imgSrc);
+    private void downloadProductImages(Product product, Document document) throws IOException {
+        createDirIfDoesNotExist(imageDir + "/" + product.imgSrc);
         Elements galleryElements = document.select("span[class=\"gallery-element\"]");
         int imgNameCount = 1;
         for (Element galleryEl : galleryElements) {
@@ -160,15 +151,12 @@ public class PriceGrabber {
         HttpResponse<?> response = getHttpResponse(imgUrl, InputStream.class);
         try (InputStream in = (InputStream) response.body()) {
             String imgName = imageNameCount + "." + getImgFormat(response);
-            String pathName = product.imgSrc + "/" + imgName;
-            File file = new File(pathName);
+            String path = product.imgSrc + "/" + imgName;
+            String fullPath = imageDir + "/" + path;
+            File file = new File(fullPath);
             Files.copy(in, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            Image image = new Image(product.id, imgUrl, pathName);
-            try {
-                imageService.insertImage(image);
-            } catch (PersistenceException e) {
-                imageService.updateImage(image);
-            }
+            Image image = new Image(product.id, imgUrl, path);
+            imageService.insertImage(image);
         }
     }
 
@@ -197,8 +185,7 @@ public class PriceGrabber {
     private Document getDocumentFromUrl(String url) throws Exception {
         HttpResponse<?> response = getHttpResponse(url, String.class);
         String html = (String) response.body();
-        Document document = Jsoup.parse(html);
-        return document;
+        return Jsoup.parse(html);
     }
 
     private String getAttributeStr(Element element, String tagName, String attrKey) {
@@ -216,14 +203,47 @@ public class PriceGrabber {
         return client.send(request, bodyHandler);
     }
 
+    public static Options createOptions(String[] args) {
+        Options options = new Options();
+        Option option = Option.builder("d").hasArg().build();
+        options.addOption(option);
+        return options;
+    }
+
+    private static CommandLine getCmd(Options options, String[] args) {
+        CommandLineParser parser = new DefaultParser();
+        try {
+            return parser.parse(options, args);
+        } catch (ParseException e) {
+            System.out.println("price grabber: unknown option --");
+            return null;
+        }
+    }
+
+    private static void printUsage() {
+        System.out.println("Invalid command: Try: URL DIR");
+    }
+
     public static void main(String[] args) {
-        if (args == null || args.length != 2) {
-            System.out.println("Invalid command: Try: URL DIR");
+        if (args == null) {
+            printUsage();
             return;
         }
 
-        String url = args[0];
-        String dir = args[1];
+        Options options = createOptions(args);
+        CommandLine cmd = getCmd(options, args);
+        if (cmd == null) {
+            return;
+        }
+
+        String[] urls = cmd.getArgs();
+        if (urls.length != 1) {
+            printUsage();
+            return;
+        }
+
+        String url = urls[0];
+        String dir = cmd.getOptionValue("d", DEFAULT_DIR);
         PriceGrabber priceGrabber = new PriceGrabber(url, dir);
         priceGrabber.grabProductList();
 
