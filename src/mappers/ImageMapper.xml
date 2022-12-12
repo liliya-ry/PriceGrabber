@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+        'http://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+
+<mapper namespace='mappers.ImageMapper'>
+
+    <insert id='insertImage' parameterType='Image'>
+        INSERT INTO IMAGES(
+        product_id,
+        img_url,
+        img_path
+        )
+        VALUES(
+        #{productId},
+        #{imgUrl},
+        #{imgPath}
+        )
+    </insert>
+
+    <update id='updateImage' parameterType='Image'>
+        UPDATE IMAGES
+        SET
+        IMG_URL = #{imgUrl},
+        IMG_PATH = #{imgPath}
+        WHERE PRODUCT_ID = #{productId}
+    </update>
+
+</mapper>

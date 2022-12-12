@@ -1,12 +1,13 @@
 import static java.net.http.HttpResponse.BodyHandlers.*;
 
+import dao.Image;
 import dao.Product;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.logging.log4j.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
-import service.LoggingConfigurator;
+import service.ImageService;
 import service.ProductService;
 
 import java.io.*;
@@ -16,7 +17,8 @@ import java.nio.file.*;
 import java.util.*;
 
 public class PriceGrabber {
-    private ProductService service = new ProductService();
+    private ProductService productService = new ProductService();
+    private ImageService imageService = new ImageService();
     private HttpClient client = HttpClient.newBuilder().build();
     private Logger logger;
     private Set<Integer> addedProductsId = new HashSet<>();
@@ -27,7 +29,7 @@ public class PriceGrabber {
     public  PriceGrabber(String baseUrl, String imageDir) {
         this.baseUrl = baseUrl;
         this.imageDir = imageDir;
-        dbProductsIds = service.getAllProductIds();
+        dbProductsIds = productService.getAllProductIds();
         //LoggingConfigurator.configureLogging();
         this.logger = LogManager.getLogger(PriceGrabber.class);
     }
@@ -53,28 +55,42 @@ public class PriceGrabber {
             addedProductsId.add(product.id);
 
             if (!dbProductsIds.contains(product.id)) {
-                service.insertProduct(product);
+                try {
+                    productService.insertProduct(product);
+                } catch (PersistenceException e) {
+                    updateProduct(product);
+                    continue;
+                }
+
                 logger.info("Product added: {} - {}", product.title, product.price);
                 continue;
             }
 
-            double oldPrice = service.getPriceById(product.id);
-            service.updateProduct(product);
-            if (oldPrice != product.price) {
-                logger.info("Product: {}, Price changed from {} to {}", product.title, oldPrice, product.price);
-            }
+            updateProduct(product);
         }
 
         grabNextPage(document);
     }
 
-    private void grabNextPage(Document document) throws Exception {
+    private void updateProduct(Product product) {
+        double oldPrice = productService.getPriceById(product.id);
+        productService.updateProduct(product);
+        if (oldPrice != product.price) {
+            logger.info("Product: {}, Price changed from {} to {}", product.title, oldPrice, product.price);
+        }
+    }
+
+    private void grabNextPage(Document document)  {
         Element nextPageEl = document.select("a[class=\"btn btn-default next\"]").first();
         if (nextPageEl == null) {
             return;
         }
         String nextPageUrl = nextPageEl.attr("href");
-        grabPage(nextPageUrl);
+        try {
+            grabPage(nextPageUrl);
+        } catch (Exception e) {
+            logger.error(e);
+        }
     }
 
 
@@ -83,12 +99,12 @@ public class PriceGrabber {
             if (addedProductsId.contains(id)) {
                 continue;
             }
-            service.markProductAsDeleted(id);
+            productService.markProductAsDeleted(id);
             logger.info("Deleted Product: {}", id);
         }
     }
 
-    private Product createProduct(Element page) throws Exception {
+    private Product createProduct(Element page) {
         Product product = new Product();
         String idStr = getAttributeStr(page, "a", "data-id");
         product.id = Integer.parseInt(idStr);
@@ -105,8 +121,13 @@ public class PriceGrabber {
             }
         }
 
+        product.imgSrc = imageDir + "/" + product.id;
         String productUrl = getAttributeStr(page, "a", "href");
-        loadGalleryAndDescription(product, productUrl);
+        try {
+            loadGalleryAndDescription(product, productUrl);
+        } catch (Exception e) {
+            logger.error(e);
+        }
 
         return product;
     }
@@ -119,24 +140,35 @@ public class PriceGrabber {
         downloadImages(product, document);
     }
 
-    private void downloadImages(Product product, Document document) throws Exception {
-        product.imgSrc = imageDir + "/" + product.id;
+    private void downloadImages(Product product, Document document) throws IOException {
         createDirIfDoesNotExist(product.imgSrc);
         Elements galleryElements = document.select("span[class=\"gallery-element\"]");
         int imgNameCount = 1;
         for (Element galleryEl : galleryElements) {
             Element imageEl = galleryEl.getElementsByTag("img").first();
             String imageLink = "https:" + imageEl.attr("src");
-            downloadImage(imageLink, product.imgSrc, imgNameCount++);
+            try {
+                downloadImage(imageLink, product, imgNameCount++);
+            } catch (Exception e) {
+                logger.error(e);
+                continue;
+            }
         }
     }
 
-    private void downloadImage(String imgUrl, String dir, int imageNameCount) throws Exception {
+    private void downloadImage(String imgUrl, Product product, int imageNameCount) throws Exception {
         HttpResponse<?> response = getHttpResponse(imgUrl, InputStream.class);
         try (InputStream in = (InputStream) response.body()) {
             String imgName = imageNameCount + "." + getImgFormat(response);
-            File file = new File(dir + "/" + imgName);
+            String pathName = product.imgSrc + "/" + imgName;
+            File file = new File(pathName);
             Files.copy(in, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            Image image = new Image(product.id, imgUrl, pathName);
+            try {
+                imageService.insertImage(image);
+            } catch (PersistenceException e) {
+                imageService.updateImage(image);
+            }
         }
     }
 

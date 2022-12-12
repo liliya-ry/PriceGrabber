@@ -2,12 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b6536b85-ee42-4771-8595-eb69b38b6173" name="Changes" comment="update">
+      <change afterPath="$PROJECT_DIR$/src/dao/Image.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/mappers/ImageMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/mappers/ImageMapper.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/service/ImageService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sonarlint/issuestore/index.pb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/PriceGrabber.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/PriceGrabber.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dao/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/dao/Product.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/mappers/ProductMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/mappers/ProductMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/mappers/ProductMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/mappers/ProductMapper.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/service/ProductService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/service/ProductService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/resources/mybatis-config.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/resources/mybatis-config.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +47,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "SONARLINT_PRECOMMIT_ANALYSIS": "true",
-    "last_opened_file_path": "D:/IdeaProjects/WebCrawler",
+    "last_opened_file_path": "D:/IdeaProjects/PriceGrabber",
     "project.structure.last.edited": "Global Libraries",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
@@ -65,7 +67,7 @@
     <configuration name="PriceGrabber" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="PriceGrabber" />
       <module name="PriceGrabber" />
-      <option name="PROGRAM_PARAMETERS" value="https://bazar.bg/obiavi/rachno-izraboteni-suveniri?page=4 $PROJECT_DIR$/../../images" />
+      <option name="PROGRAM_PARAMETERS" value="https://bazar.bg/obiavi/balgarski-suveniri $PROJECT_DIR$/../../images" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="dao.*" />
@@ -162,7 +164,21 @@
       <option name="project" value="LOCAL" />
       <updated>1670699992028</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="update">
+      <created>1670712339878</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1670712339878</updated>
+    </task>
+    <task id="LOCAL-00006" summary="update">
+      <created>1670721315228</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1670721315228</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
