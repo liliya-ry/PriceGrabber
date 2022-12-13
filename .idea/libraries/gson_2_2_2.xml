@@ -7,6 +7,7 @@
       <root url="jar://$PROJECT_DIR$/lib/log4j-api-2.19.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/log4j-core-2.19.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/commons-cli-1.5.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/com.mysql.jdbc_5.1.5.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

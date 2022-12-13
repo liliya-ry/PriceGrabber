@@ -1,5 +1,6 @@
 package dao;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.regex.*;
@@ -14,7 +15,7 @@ public class Product {
     public double price;
     public String address;
     public String imgSrc;
-    public LocalDate lastModified;
+    public Date lastModified;
     public String status = DEFAULT_STATUS;
     public String description;
 
@@ -32,18 +33,18 @@ public class Product {
 
     public void setLastModified(String modifiedStr) {
         this.lastModified = switch (modifiedStr) {
-            case "днес" -> LocalDate.now();
-            case "вчера" -> LocalDate.now().minusDays(1);
+            case "днес" -> Date.valueOf(LocalDate.now());
+            case "вчера" -> Date.valueOf(LocalDate.now().minusDays(1));
             default -> formatDate(modifiedStr);
         };
     }
 
-    private LocalDate formatDate(String date) {
+    private Date formatDate(String date) {
         String[] dateParts = date.split(" ");
         int day = Integer.parseInt(dateParts[0]);
         int month = MONTHS.get(dateParts[1]);
         int year = LocalDate.now().getYear();
-        return LocalDate.of(year, month, day);
+        return Date.valueOf(LocalDate.of(year, month, day));
     }
 
     public void setPrice(String priceStr) {
