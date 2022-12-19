@@ -7,37 +7,31 @@ import org.apache.logging.log4j.Logger;
 public class Log4j implements Log {
     private static final Logger log = LogManager.getLogger(Log4j.class);
 
-    public Log4j(String name) {}
+    public Log4j (String name) {}
 
     public boolean isDebugEnabled() {
         return log.isDebugEnabled();
     }
 
-    @Override
     public boolean isErrorEnabled() {
         return log.isErrorEnabled();
     }
 
-    @Override
     public boolean isFatalEnabled() {
         return log.isFatalEnabled();
     }
 
-    @Override
     public boolean isInfoEnabled() {
         return log.isInfoEnabled();
     }
-
 
     public boolean isTraceEnabled() {
         return log.isTraceEnabled();
     }
 
-    @Override
     public boolean isWarnEnabled() {
         return log.isWarnEnabled();
     }
-
 
     public void logDebug(Object msg) {
         log.debug(msg);
